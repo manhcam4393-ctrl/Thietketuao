@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Copy, Check, Sparkles, SlidersHorizontal, Image as ImageIcon, FileText, Upload, X, Play, Download, Save, Trash2, MessageCircle, ClipboardPaste, Sun, Palette, FolderOpen, ChevronDown, ChevronUp, Wand2, Maximize2, Minimize2, LayoutDashboard, Ruler, ArrowRight, ArrowLeft, Key, Layout, Armchair, Code, Plus, Minus, RotateCcw, Code2, Search, Camera, User, Phone, MapPin } from 'lucide-react';
+import { Copy, Check, Sparkles, SlidersHorizontal, Image as ImageIcon, FileText, Upload, X, Play, Download, Save, Trash2, MessageCircle, ClipboardPaste, Sun, Palette, FolderOpen, ChevronDown, ChevronUp, Wand2, Maximize2, Minimize2, LayoutDashboard, Ruler, ArrowRight, ArrowLeft, Key, Layout, Armchair, Code, Plus, Minus, RotateCcw, Code2, Search, Camera, User, Phone, MapPin, BarChart3 } from 'lucide-react';
 import { AppState, Preset, FurnitureAnalysisData, CabinetBlock } from './types';
 import { OPTIONS, PRESETS, DEFAULT_STATE, DEFAULT_LOGO, AN_CUONG_COLORS } from './constants';
 import { MATERIAL_LINKS } from './materials';
@@ -307,6 +307,43 @@ function App() {
   const [boxColorSearch, setBoxColorSearch] = useState('');
   const [doorColorSearch, setDoorColorSearch] = useState('');
   const [shelfColorSearch, setShelfColorSearch] = useState('');
+
+  const [tokenStats, setTokenStats] = useState(() => {
+    try {
+      const saved = localStorage.getItem('gemini_token_usage');
+      return saved ? JSON.parse(saved) : { promptTokens: 0, completionTokens: 0, totalCost: 0 };
+    } catch (e) {
+      return { promptTokens: 0, completionTokens: 0, totalCost: 0 };
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('gemini_token_usage', JSON.stringify(tokenStats));
+  }, [tokenStats]);
+
+  const updateTokenUsage = (usageMetadata: any) => {
+    if (!usageMetadata) return;
+    const { promptTokenCount = 0, candidatesTokenCount = 0 } = usageMetadata;
+    
+    // Estimates for Gemini 1.5 Flash
+    const inputCostPerMillion = 0.075;
+    const outputCostPerMillion = 0.3;
+    
+    const cost = (promptTokenCount / 1000000) * inputCostPerMillion + 
+                 (candidatesTokenCount / 1000000) * outputCostPerMillion;
+    
+    setTokenStats((prev: any) => ({
+      promptTokens: prev.promptTokens + promptTokenCount,
+      completionTokens: prev.completionTokens + candidatesTokenCount,
+      totalCost: prev.totalCost + cost
+    }));
+  };
+
+  const resetTokenStats = () => {
+    const fresh = { promptTokens: 0, completionTokens: 0, totalCost: 0 };
+    setTokenStats(fresh);
+    localStorage.setItem('gemini_token_usage', JSON.stringify(fresh));
+  };
 
   const getWardrobeImagePrompt = () => {
     if (!state.wardrobeAnalysisData) return "";
@@ -2410,6 +2447,8 @@ const generateWardrobeAnalysisText = (
         ...(Object.keys(config).length > 0 ? { config } : {})
       });
 
+      updateTokenUsage(response.usageMetadata);
+
       if (renderIdRef.current !== currentRenderId) {
         return; // Render was cancelled
       }
@@ -2923,6 +2962,8 @@ const generateWardrobeAnalysisText = (
         },
         ...(Object.keys(config).length > 0 ? { config } : {})
       });
+
+      updateTokenUsage(response.usageMetadata);
 
       if (renderIdRef.current !== currentRenderId) {
         console.log("Render cancelled");
@@ -3593,6 +3634,41 @@ const generateWardrobeAnalysisText = (
                   <p className="mt-2 text-xs text-zinc-500">
                     Sử dụng Key của riêng bạn để tránh lỗi hết hạn ngạch. Key được lưu an toàn trên trình duyệt của bạn.
                   </p>
+                </div>
+
+                <div className="pt-4 border-t border-zinc-100">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-sm font-bold text-zinc-900 flex items-center gap-2">
+                      <BarChart3 size={16} className="text-emerald-500" />
+                      Thống kê sử dụng
+                    </h4>
+                    <button 
+                      onClick={resetTokenStats}
+                      className="text-[10px] font-bold text-zinc-400 hover:text-red-500 uppercase tracking-wider transition-colors"
+                    >
+                      Reset
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100">
+                      <p className="text-[10px] font-bold text-zinc-400 uppercase mb-1">Prompt Tokens</p>
+                      <p className="text-lg font-black text-zinc-900">{tokenStats.promptTokens.toLocaleString()}</p>
+                    </div>
+                    <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100">
+                      <p className="text-[10px] font-bold text-zinc-400 uppercase mb-1">Output Tokens</p>
+                      <p className="text-lg font-black text-zinc-900">{tokenStats.completionTokens.toLocaleString()}</p>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] font-bold text-emerald-600 uppercase mb-0.5">Chi phí ước tính</p>
+                      <p className="text-xl font-black text-emerald-700">${tokenStats.totalCost.toFixed(4)}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] font-bold text-emerald-600 uppercase mb-0.5">VND (Tạm tính)</p>
+                      <p className="text-sm font-bold text-emerald-700">~{Math.round(tokenStats.totalCost * 25450).toLocaleString()}đ</p>
+                    </div>
+                  </div>
                 </div>
                 <button
                   onClick={() => {
@@ -5390,6 +5466,7 @@ const generateWardrobeAnalysisText = (
               setImageSettings(defaultImageSettings);
               setShowInpaintTool(false);
             }}
+            onTokenUsage={updateTokenUsage}
           />
         )}
       </AnimatePresence>

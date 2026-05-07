@@ -7,9 +7,10 @@ interface InpaintMaskToolProps {
   imageUrl: string;
   onClose: () => void;
   onApply: (newImageUrl: string) => void;
+  onTokenUsage?: (usageMetadata: any) => void;
 }
 
-export default function InpaintMaskTool({ imageUrl, onClose, onApply }: InpaintMaskToolProps) {
+export default function InpaintMaskTool({ imageUrl, onClose, onApply, onTokenUsage }: InpaintMaskToolProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentImage, setCurrentImage] = useState(imageUrl);
@@ -272,6 +273,10 @@ export default function InpaintMaskTool({ imageUrl, onClose, onApply }: InpaintM
         model: 'gemini-2.5-flash-image',
         contents: { parts },
       });
+      
+      if (onTokenUsage) {
+        onTokenUsage(response.usageMetadata);
+      }
       
       let newImageUrl = null;
       for (const part of response.candidates?.[0]?.content?.parts || []) {
