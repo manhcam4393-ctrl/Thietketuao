@@ -4450,7 +4450,7 @@ const generateWardrobeAnalysisText = (
                             }`}
                           >
                             {copiedExport ? <Check size={18} /> : <Camera size={18} />}
-                            {copiedExport ? 'Đã copy code Xuất hình' : 'XUẤT HÌNH SKETCHUP'}
+                            {copiedExport ? 'Đã tải ve_tu.rb' : 'XUẤT HÌNH SKETCHUP'}
                           </button>
                           {!state.wardrobeAnalysisData && (
                             <p className="text-[10px] text-zinc-400 mt-2 text-center">* Cần Phân tích công năng trước khi xuất hình</p>
@@ -4900,7 +4900,7 @@ const generateWardrobeAnalysisText = (
           title="Lấy mã Ruby để tự động dựng khối trong SketchUp"
         >
           {copiedSketchUp ? <Check size={14} /> : <Code size={14} />}
-          {copiedSketchUp ? 'Đã copy mã Ruby' : 'DỰNG HÌNH SKETCHUP'}
+          {copiedSketchUp ? 'Đã tải ve_tu.rb' : 'DỰNG HÌNH SKETCHUP'}
         </button>
         <button
           onClick={() => handleCopySketchUpCode(true)}
@@ -4912,7 +4912,7 @@ const generateWardrobeAnalysisText = (
           title="Lấy mã Ruby để xuất hình trong SketchUp (Yêu cầu Dựng hình trước)"
         >
           {copiedExport ? <Check size={14} /> : <Camera size={14} />}
-          {copiedExport ? 'Đã copy code Xuất hình' : 'XUẤT HÌNH SKETCHUP'}
+          {copiedExport ? 'Đã tải ve_tu.rb' : 'XUẤT HÌNH SKETCHUP'}
         </button>
         <button 
           onClick={() => {
@@ -4971,7 +4971,7 @@ const generateWardrobeAnalysisText = (
                       }`}
                     >
                       {copiedSketchUp ? <Check size={18} /> : <Code size={18} />}
-                      {copiedSketchUp ? 'Đã copy code SketchUp' : 'DỰNG HÌNH SKETCHUP'}
+                      {copiedSketchUp ? 'Đã tải ve_tu.rb' : 'DỰNG HÌNH SKETCHUP'}
                     </button>
                     <button
                       onClick={() => handleCopySketchUpCode(true)}
@@ -4982,7 +4982,7 @@ const generateWardrobeAnalysisText = (
                       }`}
                     >
                       {copiedExport ? <Check size={18} /> : <Camera size={18} />}
-                      {copiedExport ? 'Đã copy code Xuất hình' : 'XUẤT HÌNH SKETCHUP'}
+                      {copiedExport ? 'Đã tải ve_tu.rb' : 'XUẤT HÌNH SKETCHUP'}
                     </button>
                     {designImage && (
                       <button
