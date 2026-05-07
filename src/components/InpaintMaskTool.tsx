@@ -230,7 +230,8 @@ export default function InpaintMaskTool({ imageUrl, onClose, onApply }: InpaintM
     setIsProcessing(true);
     
     try {
-      const apiKey = process.env.GEMINI_API_KEY || '';
+      const customApiKey = localStorage.getItem('geminiApiKey');
+      const apiKey = customApiKey || process.env.GEMINI_API_KEY || '';
       if (!apiKey) {
         throw new Error('Thiếu API Key');
       }

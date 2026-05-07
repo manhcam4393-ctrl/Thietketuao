@@ -299,6 +299,10 @@ const ColorPicker = ({ onSelect, searchTerm, setSearchTerm, colors, label = "mã
 
 function App() {
   const [apiMode, setApiMode] = useState<'free' | 'paid' | null>(null);
+  const [customApiKey, setCustomApiKey] = useState<string>(localStorage.getItem('geminiApiKey') || '');
+  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
+  const [tempApiKey, setTempApiKey] = useState(localStorage.getItem('geminiApiKey') || '');
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [state, setState] = useState<AppState>(DEFAULT_STATE);
   const [boxColorSearch, setBoxColorSearch] = useState('');
   const [doorColorSearch, setDoorColorSearch] = useState('');
@@ -444,14 +448,8 @@ CRITICAL NEGATIVE PROMPT (ABSOLUTELY DO NOT DRAW THESE):
     return () => window.removeEventListener('click', handleClickOutside);
   }, [activeAddMenu]);
 
-  const handleSelectApiKey = async () => {
-    try {
-      // @ts-ignore
-      await window.aistudio?.openSelectKey();
-      setApiMode('paid');
-    } catch (e) {
-      console.error("Failed to open select key dialog", e);
-    }
+  const handleSelectApiKey = () => {
+    setShowApiKeyInput(!showApiKeyInput);
   };
 
   const handleSelectFreeApi = () => {
@@ -686,19 +684,56 @@ CRITICAL NEGATIVE PROMPT (ABSOLUTELY DO NOT DRAW THESE):
               <ArrowRight size={20} className="text-zinc-300 group-hover:text-zinc-500 transition-colors" />
             </button>
 
-            <button
-              onClick={handleSelectApiKey}
-              className="group relative overflow-hidden bg-white hover:bg-blue-50 border-2 border-blue-100 hover:border-blue-200 p-6 rounded-3xl transition-all duration-300 text-left flex items-center gap-5 shadow-sm hover:shadow-md"
-            >
-              <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 group-hover:bg-blue-500 group-hover:text-white transition-all">
-                <Sparkles size={24} />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-bold text-zinc-900 text-lg">Bản Pro API</h3>
-                <p className="text-sm text-zinc-500">Sử dụng mô hình Gemini 3.1 Pro (Mạnh nhất)</p>
-              </div>
-              <ArrowRight size={20} className="text-blue-300 group-hover:text-blue-500 transition-colors" />
-            </button>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={handleSelectApiKey}
+                className="group relative overflow-hidden bg-white hover:bg-blue-50 border-2 border-blue-100 hover:border-blue-200 p-6 rounded-3xl transition-all duration-300 text-left flex items-center gap-5 shadow-sm hover:shadow-md"
+              >
+                <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 group-hover:bg-blue-500 group-hover:text-white transition-all">
+                  <Sparkles size={24} />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-zinc-900 text-lg">Bản Pro API</h3>
+                  <p className="text-sm text-zinc-500">Sử dụng mô hình Gemini 3.1 Pro (Mạnh nhất)</p>
+                </div>
+                <ArrowRight size={20} className={`text-blue-300 transition-all ${showApiKeyInput ? 'rotate-90' : 'group-hover:text-blue-500'}`} />
+              </button>
+              
+              <AnimatePresence>
+                {showApiKeyInput && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 flex flex-col gap-3">
+                      <input
+                        type="password"
+                        value={tempApiKey}
+                        onChange={(e) => setTempApiKey(e.target.value)}
+                        placeholder="Nhập Gemini API Key của bạn..."
+                        className="w-full px-4 py-3 rounded-xl border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => {
+                          localStorage.setItem('geminiApiKey', tempApiKey);
+                          setCustomApiKey(tempApiKey);
+                          setApiMode('paid');
+                        }}
+                        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-colors shadow-md hover:shadow-lg active:scale-95"
+                      >
+                        Xác nhận & Bắt đầu
+                      </button>
+                      <p className="text-[10px] text-zinc-500 text-center">
+                        API Key được lưu trữ cục bộ trên trình duyệt của bạn (localStorage)
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
 
           <div className="pt-4 border-t border-zinc-100">
@@ -2332,7 +2367,7 @@ const generateWardrobeAnalysisText = (
     const currentRenderId = Date.now();
     renderIdRef.current = currentRenderId;
     try {
-      const apiKey = apiMode === 'free' ? process.env.GEMINI_API_KEY : process.env.API_KEY;
+      const apiKey = customApiKey || (apiMode === 'free' ? process.env.GEMINI_API_KEY : process.env.API_KEY);
       
       if (!apiKey) {
         if (apiMode === 'paid') {
@@ -2827,7 +2862,7 @@ const generateWardrobeAnalysisText = (
     const currentRenderId = Date.now();
     renderIdRef.current = currentRenderId;
     try {
-      const apiKey = apiMode === 'free' ? process.env.GEMINI_API_KEY : process.env.API_KEY;
+      const apiKey = customApiKey || (apiMode === 'free' ? process.env.GEMINI_API_KEY : process.env.API_KEY);
       
       if (!apiKey) {
         if (apiMode === 'paid') {
@@ -3523,6 +3558,58 @@ const generateWardrobeAnalysisText = (
           </div>
         )}
       </AnimatePresence>
+      {/* Settings Modal */}
+      <AnimatePresence>
+        {showSettingsModal && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-zinc-900/60 backdrop-blur-md p-4">
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-zinc-100"
+            >
+              <div className="flex items-center justify-between p-5 border-b border-zinc-100 bg-zinc-50/50">
+                <h3 className="font-bold text-zinc-800 flex items-center gap-2">
+                  <Key size={18} className="text-blue-500" />
+                  Cài đặt API Key
+                </h3>
+                <button 
+                  onClick={() => setShowSettingsModal(false)}
+                  className="text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 p-1.5 rounded-full transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-zinc-700 mb-2">Gemini API Key của bạn</label>
+                  <input
+                    type="password"
+                    value={tempApiKey}
+                    onChange={(e) => setTempApiKey(e.target.value)}
+                    placeholder="Bỏ trống để dùng mặc định..."
+                    className="w-full px-4 py-3 rounded-xl border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
+                  />
+                  <p className="mt-2 text-xs text-zinc-500">
+                    Sử dụng Key của riêng bạn để tránh lỗi hết hạn ngạch. Key được lưu an toàn trên trình duyệt của bạn.
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    localStorage.setItem('geminiApiKey', tempApiKey);
+                    setCustomApiKey(tempApiKey);
+                    setShowSettingsModal(false);
+                  }}
+                  className="w-full py-3 bg-zinc-900 hover:bg-black text-white rounded-xl font-medium transition-colors"
+                >
+                  Lưu thay đổi
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Paste Modal */}
       {showPasteModal && (
         <div id="paste-modal" className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/60 backdrop-blur-md">
@@ -3572,6 +3659,14 @@ const generateWardrobeAnalysisText = (
             >
               {apiMode === 'paid' ? <Sparkles size={14} className="text-blue-500" /> : <Sun size={14} className="text-orange-500" />}
               {apiMode === 'paid' ? 'Bản Trả Phí' : 'Bản Miễn Phí'}
+            </button>
+            <button
+              onClick={() => setShowSettingsModal(true)}
+              className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-all border border-blue-200"
+              title="Cài đặt API Key"
+            >
+              <Key size={14} />
+              <span className="hidden sm:inline">Cài đặt API</span>
             </button>
             <div className="h-4 w-px bg-zinc-200 hidden sm:block"></div>
             <span className="text-sm text-zinc-500 font-medium hidden sm:inline-block whitespace-nowrap">Cấu hình mẫu:</span>
