@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Copy, Check, Sparkles, SlidersHorizontal, Image as ImageIcon, FileText, Upload, X, Play, Download, Save, Trash2, MessageCircle, ClipboardPaste, Sun, Palette, FolderOpen, ChevronDown, ChevronUp, Wand2, Maximize2, Minimize2, LayoutDashboard, Ruler, ArrowRight, ArrowLeft, Key, Layout, Armchair, Code, Plus, Minus, RotateCcw, Code2, Search, Camera, User, Phone, MapPin } from 'lucide-react';
 import { AppState, Preset, FurnitureAnalysisData, CabinetBlock } from './types';
 import { OPTIONS, PRESETS, DEFAULT_STATE, DEFAULT_LOGO, AN_CUONG_COLORS } from './constants';
+import { MATERIAL_LINKS } from './materials';
 import { GoogleGenAI } from '@google/genai';
 import { ImageSettings, defaultImageSettings, applyFilters } from './imageProcessor';
 import { motion, AnimatePresence } from 'motion/react';
@@ -239,9 +240,9 @@ const generateWardrobeDiagram = (data: FurnitureAnalysisData, hasTopBlock: boole
 };
 
 
-const ColorPicker = ({ onSelect, searchTerm, setSearchTerm, colors, label = "mã màu" }: { onSelect: (color: string) => void, searchTerm: string, setSearchTerm: (val: string) => void, colors: string[], label?: string }) => {
+const ColorPicker = ({ onSelect, searchTerm, setSearchTerm, colors, label = "mã màu" }: { onSelect: (color: string) => void, searchTerm: string, setSearchTerm: (val: string) => void, colors: {name: string, url: string}[], label?: string }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const filteredColors = colors.filter(c => c.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredColors = colors.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
   
   return (
     <div className="space-y-2 mt-2">
@@ -267,22 +268,25 @@ const ColorPicker = ({ onSelect, searchTerm, setSearchTerm, colors, label = "mã
               autoFocus
             />
           </div>
-          <div className="grid grid-cols-2 gap-1.5 max-h-[160px] overflow-y-auto pr-1 custom-scrollbar">
+          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
             {filteredColors.map((color) => (
               <button
-                key={color}
+                key={color.name}
                 onClick={() => {
-                  onSelect(color);
+                  onSelect(color.name);
                   setIsOpen(false);
                 }}
-                className="text-left px-2 py-1.5 text-[9px] font-medium bg-zinc-50 border border-zinc-100 hover:border-indigo-300 hover:bg-indigo-50 rounded-lg transition-all truncate"
-                title={color}
+                className="flex flex-col items-center gap-1.5 p-1.5 bg-zinc-50 border border-zinc-100 hover:border-indigo-400 hover:shadow-md rounded-xl transition-all group"
+                title={color.name}
               >
-                {color}
+                <div className="w-full aspect-square rounded-lg overflow-hidden border border-zinc-200 shadow-sm group-hover:border-indigo-300">
+                  <img src={color.url} alt={color.name} className="w-full h-full object-cover" loading="lazy" />
+                </div>
+                <span className="text-[9px] font-semibold text-center truncate w-full text-zinc-600 group-hover:text-indigo-700">{color.name}</span>
               </button>
             ))}
             {filteredColors.length === 0 && (
-              <div className="col-span-2 py-4 text-center text-[10px] text-zinc-400 italic">
+              <div className="col-span-full py-4 text-center text-[10px] text-zinc-400 italic">
                 Không tìm thấy {label}
               </div>
             )}
@@ -4523,7 +4527,7 @@ const generateWardrobeAnalysisText = (
                                 label="màu thùng"
                                 searchTerm={boxColorSearch}
                                 setSearchTerm={setBoxColorSearch}
-                                colors={AN_CUONG_COLORS}
+                                colors={MATERIAL_LINKS}
                                 onSelect={(color) => {
                                   const baseDir = state.wardrobeExternalBaseDir.replace(/\\/g, '/');
                                   const normalizedBase = baseDir.endsWith('/') ? baseDir : baseDir + '/';
@@ -4577,7 +4581,7 @@ const generateWardrobeAnalysisText = (
                                   label="màu cánh"
                                   searchTerm={doorColorSearch}
                                   setSearchTerm={setDoorColorSearch}
-                                  colors={AN_CUONG_COLORS}
+                                  colors={MATERIAL_LINKS}
                                   onSelect={(color) => {
                                     const baseDir = state.wardrobeExternalBaseDir.replace(/\\/g, '/');
                                     const normalizedBase = baseDir.endsWith('/') ? baseDir : baseDir + '/';
@@ -4630,7 +4634,7 @@ const generateWardrobeAnalysisText = (
                                   label="màu kệ trang trí"
                                   searchTerm={shelfColorSearch}
                                   setSearchTerm={setShelfColorSearch}
-                                  colors={AN_CUONG_COLORS}
+                                  colors={MATERIAL_LINKS}
                                   onSelect={(color) => {
                                     const baseDir = state.wardrobeExternalBaseDir.replace(/\\/g, '/');
                                     const normalizedBase = baseDir.endsWith('/') ? baseDir : baseDir + '/';
